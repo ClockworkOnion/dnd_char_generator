@@ -1,20 +1,33 @@
-import wx, math
+import wx, math, chargen
 
 class MyFrame(wx.Frame):    
     def __init__(self):
         super().__init__(parent=None, title='DnD5e Character Creator', size=(1000, 1000)) # Boilerplate
+
+        self.info_lines = []
+
         panel = wx.Panel(self)
 
         outer_sizer = wx.BoxSizer(wx.HORIZONTAL)
         attributes_sizer = self.create_statblock(panel)
         outer_sizer.Add(attributes_sizer)
 
-        # Placeholder widget
-        bla_widget = wx.StaticText(panel, label="SOME TEXT", style=wx.ALIGN_LEFT)
-        outer_sizer.Add(bla_widget, 0, wx.ALL | wx.EXPAND, 5)
+        self.info_text = wx.StaticText(panel, label="Dnd5e Character Creator. Welcome!", style=wx.ALIGN_LEFT)
+        self.info_text.SetFont(self.mono_font)
+        outer_sizer.Add(self.info_text, 0, wx.ALL | wx.EXPAND, 5)
         
         panel.SetSizer(outer_sizer)
         self.Show() 
+
+    def set_infotext(self, string):
+        if (len(self.info_lines) > 3):
+            self.info_lines.pop(0)
+        self.info_lines.append(string)
+
+        whole_string = ""
+        for l in self.info_lines:
+            whole_string += (l+"\n")
+        self.info_text.SetLabel(whole_string)
         
     def minus_button_triggered(self, event, value):
         val = int(self.attribute_box_pointers[value].GetValue())
@@ -33,7 +46,21 @@ class MyFrame(wx.Frame):
         return str(mod) if (mod < 0) else ("+"+ str(mod))
 
     def generate_character(self, event):
-        print("Doing something...")
+        c = self.class_select.GetValue()
+        if (c == ""):
+            self.set_infotext("No class selected!")
+            return
+        self.set_infotext("Creating stats for a " + c)
+        stats = chargen.get_attribute_rolls(c)
+        attributes = ["STR", "DEX", "CON", "WIS", "INT", "CHA"] 
+        for a in attributes:
+            self.attribute_box_pointers[a].SetValue(str(stats[a]))
+            self.attribute_mod_pointers[a].SetLabel(self.attribute_mod_from_total(stats[a]))
+
+        self.set_infotext("Pointbuy value: " + str(chargen.calculate_pointbuy_value(stats.values())))
+
+    def on_class_selected(self, event):
+        print("Selected " + self.class_select.GetValue())
 
     def create_statblock(self, target_panel):
         attributes = ["STR", "DEX", "CON", "WIS", "INT", "CHA"] 
@@ -71,6 +98,7 @@ class MyFrame(wx.Frame):
             self.attribute_mod_pointers[attribute_name_statictext.GetLabel()] = attribute_modifier_statictext
             attributes_sizer.Add(inner_sizer)
         self.class_select = wx.ComboBox(target_panel, choices=classes, style=wx.CB_READONLY)
+        self.class_select.Bind(wx.EVT_COMBOBOX, self.on_class_selected)
         attributes_sizer.Add(self.class_select, 0, wx.ALL | wx.EXPAND, 5)
         generate_character_button = wx.Button(target_panel, label='Generate Character')
         generate_character_button.Bind(wx.EVT_BUTTON, self.generate_character)
