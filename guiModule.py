@@ -2,20 +2,25 @@ import wx, math, chargen
 
 class MyFrame(wx.Frame):    
     def __init__(self):
-        super().__init__(parent=None, title='DnD5e Character Creator', size=(1000, 1000)) # Boilerplate
+        super().__init__(parent=None, title='DnD5e Character Creator', size=(500, 500)) # Boilerplate
 
         self.info_lines = []
 
         panel = wx.Panel(self)
 
         outer_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        right_inner_sizer = wx.BoxSizer(wx.VERTICAL)
         attributes_sizer = self.create_statblock(panel)
         outer_sizer.Add(attributes_sizer)
 
         self.info_text = wx.StaticText(panel, label="Dnd5e Character Creator. Welcome!", style=wx.ALIGN_LEFT)
         self.info_text.SetFont(self.mono_font)
-        outer_sizer.Add(self.info_text, 0, wx.ALL | wx.EXPAND, 5)
+        right_inner_sizer.Add(self.info_text, 0, wx.ALL | wx.EXPAND, 5)
         
+        self.statblock = wx.TextCtrl(panel, size=(80,80), value="Stats will appear here\nAlso another line.")
+        right_inner_sizer.Add(self.statblock, 0, wx.ALL | wx.EXPAND, 5)
+
+        outer_sizer.Add(right_inner_sizer, 0, wx.ALL | wx.EXPAND,5)
         panel.SetSizer(outer_sizer)
         self.Show() 
 
@@ -58,13 +63,22 @@ class MyFrame(wx.Frame):
             self.attribute_mod_pointers[a].SetLabel(self.attribute_mod_from_total(stats[a]))
 
         self.set_infotext("Pointbuy value: " + str(chargen.calculate_pointbuy_value(stats.values())))
+        self.calculate_statblock()
+    
+    def calculate_statblock(self):
+        self.statblock.SetValue("Hallo")
+
 
     def on_class_selected(self, event):
         print("Selected " + self.class_select.GetValue())
 
+    def on_armor_selected(self, event):
+        print("Selected " + self.armor_select.GetValue())
+
     def create_statblock(self, target_panel):
         attributes = ["STR", "DEX", "CON", "WIS", "INT", "CHA"] 
         classes = ["Fighter", "Rogue", "Wizard"]
+        armor_types = ["None", "Leather (AC11)", "Studded Leather (AC12)", "Chain Mail (AC16)"]
         self.attribute_box_pointers = dict()
         self.attribute_mod_pointers = dict()
         self.mono_font = wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace")
@@ -99,7 +113,11 @@ class MyFrame(wx.Frame):
             attributes_sizer.Add(inner_sizer)
         self.class_select = wx.ComboBox(target_panel, choices=classes, style=wx.CB_READONLY)
         self.class_select.Bind(wx.EVT_COMBOBOX, self.on_class_selected)
+        self.armor_select = wx.ComboBox(target_panel, choices=armor_types, style=wx.CB_READONLY)
+        self.armor_select.Bind(wx.EVT_COMBOBOX, self.on_armor_selected)
+
         attributes_sizer.Add(self.class_select, 0, wx.ALL | wx.EXPAND, 5)
+        attributes_sizer.Add(self.armor_select, 0, wx.ALL | wx.EXPAND, 5)
         generate_character_button = wx.Button(target_panel, label='Generate Character')
         generate_character_button.Bind(wx.EVT_BUTTON, self.generate_character)
         attributes_sizer.Add(generate_character_button, 0, wx.ALL | wx.CENTER, 5)
