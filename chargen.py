@@ -15,7 +15,7 @@ class character_generator():
         level = int(self.character_info["CharLevel"])
         char_class = self.character_info["Class"]
         CONmod = int(self.attribute_mod_from_total(self.character_info["CON"]))
-        return self.hit_dice_table[char_class][0] + self.hit_dice_table[char_class][1]*(level-1) + CONmod
+        return self.hit_dice_table[char_class][0] + self.hit_dice_table[char_class][1]*(level-1) + CONmod*level
 
     def roll_dice(self, count, sides):
         sum = 0
